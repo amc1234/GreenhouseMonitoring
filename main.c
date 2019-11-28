@@ -158,17 +158,13 @@ void main(void) {
                                             // to activate previously configured port settings
 
     Init_LCD();                             //setup functions
-    Init_UART();                            //UART is a serial communication. Made up of TX-> Transmitter and RX-> Receiver. The MCU has a TX and RX and so does the computer
-                                            //Computer TX goes to MCU RX and computer RX goes to MCU TX. To communicate they must be connected to the same serial port ("hallway")
-                                            //In this case, it's COM6 (all ports will always be COM#). Serial ports must be opened. The computer one is opened when you run putty
-                                            //and connect to COM#. MCU one is opened in this function.
+    Init_UART();                            
     motor_driver_ventilation_setup();
     motor_driver_irrigation_setup();
     button_setup();
     multiplexer_setup();
-    _enable_interrupt();                    //interrupt is triggered by an "event", an event is when something happens ex: button click
-                                            //the event for this interrupt is when there is a char sent through UART (when something is received at RX of the computer -> see interrupt)
-
+    _enable_interrupt();                    
+    
     int j;
     int zone_toggle = 0; //0 = zone1, 1 = zone2
     int sensor_toggle = 0; //0 = moisture sensor, 1 = temperature
@@ -208,7 +204,7 @@ void main(void) {
                             ventilation_zone2();
                         }
                        else{
-                          /* GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN7);  //S0
+                           GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN7);  //S0
                            GPIO_setOutputHighOnPin(GPIO_PORT_P8, GPIO_PIN0);  //S1
                            GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_PIN5);   //S2
 
@@ -295,13 +291,13 @@ void main(void) {
 #pragma vector=USCI_A0_VECTOR       //interrupt setup
 __interrupt
 void EUSCI_A0_ISR(void){
-   uint8_t RxStatus = EUSCI_A_UART_getInterruptStatus(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG); //setup for receiver, EUSCI_A0_BASE -> UART base register
-   EUSCI_A_UART_clearInterrupt(EUSCI_A0_BASE, RxStatus); //clear interrupt (must be clear every time the interrupt is called
+   uint8_t RxStatus = EUSCI_A_UART_getInterruptStatus(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT_FLAG);  //setup for receiver, EUSCI_A0_BASE -> UART base register
+   EUSCI_A_UART_clearInterrupt(EUSCI_A0_BASE, RxStatus);                                                    //clear interrupt (must be clear every time the interrupt is called
 
-   if(RxStatus) //RX -> Receiver, TX -> Transmitter (if char received)
-       user_input = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);    //read what's in EUSCI_A0_BASE and store
+   if(RxStatus)                                                                                             //if char received
+       user_input = EUSCI_A_UART_receiveData(EUSCI_A0_BASE);                                                //read what's in EUSCI_A0_BASE and store
 
-   if (user_input == '0')                                       //if value read is 0, toggle motors
+   if (user_input == '0')                  //if value read is 0, toggle motors
        motor_enable = motor_enable^1;
    else if (interrupt_tracker == 0){
        vent_threshold = user_input*10;     //ventilation first (in degrees celsius)
