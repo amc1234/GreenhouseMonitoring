@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <msp430.h>
-#include "main.h"
+#include "main_setup.h"
 #include "hal_LCD.h"
 #include "Board.h"
 #include "adc.h"
