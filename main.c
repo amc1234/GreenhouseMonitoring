@@ -198,9 +198,9 @@ void main(void) {
 
                         ambient_light = ADCMEM0;                //read value at ADC register and store it
 
-                        if(ambient_light > 775) //current_temp > vent_threshold)
+                        if(ambient_light > 775 && current_temp > vent_threshold)
                             ventilation_zone1();
-                        else if (ambient_light <= 775) //current_temp < irr_threshold)
+                        else if (ambient_light <= 775 && current_temp < irr_threshold)
                             ventilation_zone2();
                         }
                        else{
@@ -213,7 +213,7 @@ void main(void) {
                            if(ambient_light > 512 && current_temp > vent_threshold)
                                ventilation_zone2();
                            else if (ambient_light <=512 && current_moisture < irr_threshold)
-                               irrigation_zone2();*/
+                               irrigation_zone2();
                        }
                     }
         }
