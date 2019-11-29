@@ -200,8 +200,8 @@ void main(void) {
 
                         if(ambient_light > 775 && current_temp > vent_threshold)
                             ventilation_zone1();
-                        else if (ambient_light <= 775 && current_temp < irr_threshold)
-                            ventilation_zone2();
+                        else if (ambient_light <= 775 && current_moisture < irr_threshold)
+                            irrigation_zone1();
                         }
                        else{
                            GPIO_setOutputHighOnPin(GPIO_PORT_P2, GPIO_PIN7);  //S0
