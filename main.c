@@ -2,7 +2,8 @@
 //  Greenhouse_demo
 //  Rev1
 //
-//  This code is designed for the greenhouse project.
+//  This code is designed for the greenhouse motoring system.
+//  It is meant to run on an MSP430FR4133.
 //
 //  Author: Andrea Martinez Chung and Priyanka Naik
 //  November 22, 2019
@@ -18,12 +19,14 @@
 #include "gpio.h"
 #include "eusci_a_uart.h"
 
-int adc_display[4];
-int degree;
-char user_input = 0;
+#DEFINE room_temp 23;
+
+int adc_display[4];         //to display 4 chars on the LCD
+int degree;                 //to hold how many digits we are displaying on the LCD
+char user_input = 0;        //to store the user input from the UART interrupt
 
 int motor_enable = 0;       //0 is on, 1 is off
-int vent_threshold = 50;    //default value
+float vent_threshold = 0.5;    //default value of
 int irr_threshold = 50;     //default value
 int interrupt_tracker = 0;  //setting ventilation first, then irrigation
 int current_temp;
@@ -109,8 +112,8 @@ void ventilation_zone1(){
         GPIO_setOutputHighOnPin(GPIO_PORT_P5, GPIO_PIN0);   //AI1
         GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN7);   //PWMA
         GPIO_setOutputHighOnPin(GPIO_PORT_P5, GPIO_PIN2);   //STBY
-        _delay_cycles(500000);                              //run the motor for a certain amount of time
-
+        _delay_cycles(50000000);                            //run the motor for 10 seconds
+    
         GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_PIN2);    //STBY
         GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_PIN0);    //AI1
         GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN7);    //PWMA
@@ -121,7 +124,7 @@ void ventilation_zone2(){
         GPIO_setOutputHighOnPin(GPIO_PORT_P5, GPIO_PIN0);   //AI1
         GPIO_setOutputHighOnPin(GPIO_PORT_P5, GPIO_PIN3);   //PWMB
         GPIO_setOutputHighOnPin(GPIO_PORT_P5, GPIO_PIN2);   //STBY
-        _delay_cycles(500000);                              //run the motor for a certain amount of time
+        _delay_cycles(50000000);                            //run the motor for 10 seconds
 
         GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_PIN2);    //STBY
         GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_PIN0);    //AI1
@@ -133,7 +136,7 @@ void irrigation_zone1(){
         GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5);   //AI1
         GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN3);   //PWMA
         GPIO_setOutputHighOnPin(GPIO_PORT_P8, GPIO_PIN3);   //STBY
-        _delay_cycles(50000000);                            //run the motor for a certain amount of time
+        _delay_cycles(50000000);                            //run the motor for 10 seconds
 
         GPIO_setOutputLowOnPin(GPIO_PORT_P8, GPIO_PIN3);    //STBY
         GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_PIN5);    //AI1
@@ -145,7 +148,7 @@ void irrigation_zone2(){
         GPIO_setOutputHighOnPin(GPIO_PORT_P1, GPIO_PIN5);   //AI1
         GPIO_setOutputHighOnPin(GPIO_PORT_P8, GPIO_PIN2);   //PWMB
         GPIO_setOutputHighOnPin(GPIO_PORT_P8, GPIO_PIN3);   //STBY
-        _delay_cycles(50000000);                            //run the motor for a certain amount of time
+        _delay_cycles(50000000);                            //run the motor for 10 seconds
 
         GPIO_setOutputLowOnPin(GPIO_PORT_P8, GPIO_PIN3);    //STBY
         GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_PIN0);    //AI1
@@ -198,7 +201,7 @@ void main(void) {
 
                         ambient_light = ADCMEM0;                //read value at ADC register and store it
 
-                        if(ambient_light > 775 && current_temp > vent_threshold)
+                        if(ambient_light > 775 && current_temp > (room_temp*vent_threshold))
                             ventilation_zone1();
                         else if (ambient_light <= 775 && current_moisture < irr_threshold)
                             irrigation_zone1();
@@ -210,7 +213,7 @@ void main(void) {
 
                            unsigned int ambient_light = ADCMEM0;              //base address of ADC registers is 0700h. ADCMEM0 = 12h
 
-                           if(ambient_light > 512 && current_temp > vent_threshold)
+                           if(ambient_light > 512 && current_temp > (room_temp*vent_threshold))
                                ventilation_zone2();
                            else if (ambient_light <=512 && current_moisture < irr_threshold)
                                irrigation_zone2();
@@ -300,11 +303,11 @@ void EUSCI_A0_ISR(void){
    if (user_input == '0')                  //if value read is 0, toggle motors
        motor_enable = motor_enable^1;
    else if (interrupt_tracker == 0){
-       vent_threshold = user_input*10;     //ventilation first (in degrees celsius)
+       vent_threshold = (float)user_input/10+1;     //ventilation first (in degrees celsius) - take the percentage (in decimal form) as threshold
        interrupt_tracker++;
    }
    else if (interrupt_tracker == 1){
-       irr_threshold = user_input*10;      //irrigation second (in percent)
+       irr_threshold = user_input*10;      //irrigation second (in percent) - take the percentage as threshold
        interrupt_tracker = 0;
    }
 }
